@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TRENCH SURVIVOR: Memecoin Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+:root{color-scheme:dark;--bg:#06080b;--pn:#0d1117;--ln:#1a212b;--tx:#d6deea;--dm:#6c7889;--up:#22c55e;--dn:#ef4444;--ac:#8b7cff;--am:#f59e0b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;-webkit-tap-highlight-color:transparent}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:12px}
+.up{color:var(--up)}.dn{color:var(--dn)}.dm{color:var(--dm)}
+.b{display:block;font-weight:800;border-radius:10px;padding:.8rem .5rem;text-align:center;transition:transform .08s,filter .15s;user-select:none;touch-action:manipulation;line-height:1.2}
+.b:active{transform:scale(.96)}.b:hover{filter:brightness(1.15)}.b:disabled{opacity:.3;pointer-events:none}
+.g{background:var(--up);color:#04130a}.y{background:var(--am);color:#1a0f00}.x{background:#1a212b;color:var(--tx)}.r{background:var(--dn);color:#fff}
+.hid{display:none!important}
+@keyframes sh{0%,100%{transform:none}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+.shake{animation:sh .5s;box-shadow:0 0 40px #ef444499}
+.glow{box-shadow:0 0 36px #22c55e66}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}}
+</style>
+</head>
+<body>
+<main class="max-w-5xl mx-auto p-3 sm:p-5 space-y-3">
+  <header class="flex items-center justify-between gap-2">
+    <div>
+      <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight">🪖 TRENCH<span class="up">SURVIVOR</span></h1>
+      <p class="dm text-[11px]">Memecoin Simulator. Read the fees, bundlers and top-10 holders. Dodge the rugs.</p>
+    </div>
+    <div class="flex gap-2 items-center">
+      <a id="sx" target="_blank" rel="noopener" class="b x text-xs !py-2 px-3">Share on X</a>
+      <button id="mu" class="b x !py-2 px-3" onclick="mute()" aria-label="Toggle sound">🔊</button>
+    </div>
+  </header>
+
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div class="pn p-3"><div class="dm text-[10px]">BALANCE</div><div class="text-xl font-extrabold"><span id="bal">10.00</span> <span class="text-xs dm">SOL</span></div></div>
+    <div class="pn p-3"><div class="dm text-[10px]">TRADER RANK</div><div id="rk" class="font-extrabold text-sm sm:text-base"></div></div>
+    <div class="pn p-3"><div class="dm text-[10px]">STREAK</div><div id="st" class="font-extrabold text-xl"></div><div id="bs" class="dm text-[10px]"></div></div>
+    <div class="pn p-3"><div class="dm text-[10px]">RECORD</div><div id="wl" class="font-extrabold text-xl"></div></div>
+  </section>
+  <div class="pn p-2">
+    <div class="flex justify-between text-[10px] dm mb-1"><span>GOAL: 1,000 SOL</span><span id="gl"></span></div>
+    <div class="h-2 rounded bg-[#1a212b]"><div id="gb" class="h-2 rounded" style="background:linear-gradient(90deg,#22c55e,#8b7cff);width:2%"></div></div>
+  </div>
+
+  <div class="grid lg:grid-cols-[1fr_320px] gap-3">
+    <section id="card" class="pn p-3 sm:p-4 relative overflow-hidden">
+      <div class="flex items-start justify-between gap-2">
+        <div><div id="tk" class="text-xl sm:text-2xl font-extrabold"></div><div id="nm" class="dm text-xs"></div></div>
+        <div class="text-right"><div id="xx" class="text-xl sm:text-2xl font-extrabold"></div><div id="xl" class="dm text-[10px]"></div></div>
+      </div>
+      <canvas id="cv" class="w-full h-56 sm:h-72 mt-2 block"></canvas>
+      <div class="h-1 rounded bg-[#1a212b] mt-2"><div id="tm" class="h-1 rounded" style="background:var(--ac);width:100%"></div></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-center">
+        <div class="pn p-2"><div class="dm text-[10px]">MARKET CAP</div><div id="t1" class="font-bold"></div></div>
+        <div class="pn p-2"><div class="dm text-[10px]">TOTAL FEES</div><div id="t2" class="font-bold"></div></div>
+        <div class="pn p-2"><div class="dm text-[10px]">BUNDLERS</div><div id="t3" class="font-bold"></div></div>
+        <div class="pn p-2"><div class="dm text-[10px]">TOP 10 HOLDERS</div><div id="t4" class="font-bold"></div></div>
+      </div>
+      <div id="ov" class="hid absolute inset-0 flex flex-col items-center justify-center text-center bg-black/65 pointer-events-none">
+        <div id="ot" class="text-3xl sm:text-5xl font-extrabold"></div><div id="od" class="text-lg mt-1"></div>
+      </div>
+    </section>
+
+    <div class="space-y-3">
+      <section class="pn p-3 space-y-2">
+        <div id="pp" class="hid text-center text-sm"></div>
+        <div id="rowB" class="grid grid-cols-2 gap-2">
+          <button id="b1" class="b g" onclick="buy(1)">BUY (1 SOL)</button>
+          <button id="b5" class="b g" onclick="buy(5)">BUY (5 SOL)</button>
+          <button id="ba" class="b y" onclick="buy(G.bal)">ALL IN</button>
+          <button class="b x" onclick="skip()">SKIP ⏭</button>
+        </div>
+        <div id="rowS" class="hid"><button id="bS" class="b r w-full text-xl !py-5" onclick="finish('sell')">SELL ALL</button></div>
+        <div id="rowN" class="hid"><button class="b g w-full text-lg !py-4" onclick="next()">NEXT COIN ▶</button></div>
+        <div class="dm text-[10px] hidden sm:block">Keys: 1 · 5 · A = buy, S = skip, Space = sell / next</div>
+      </section>
+      <section class="pn p-3 text-xs space-y-1 h-36 overflow-hidden"><div class="dm text-[10px]">TRADE LOG</div><div id="lg" class="space-y-1"></div></section>
+    </div>
+  </div>
+
+  <footer class="pn p-4 flex flex-col sm:flex-row items-center justify-between gap-3" style="border-color:var(--ac)">
+    <div class="text-center sm:text-left"><div class="font-extrabold text-lg">Ready for the real trenches?</div><div class="dm text-xs">Simulation only. Real memecoins can and do go to zero. Not financial advice.</div></div>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <a id="aA" target="_blank" rel="noopener sponsored" class="b flex-1 px-4" style="background:var(--ac);color:#fff"></a>
+      <a id="aT" target="_blank" rel="noopener sponsored" class="b x flex-1 px-4" style="border:1px solid var(--ac)"></a>
+    </div>
+  </footer>
+</main>
+
+<div id="go" class="hid fixed inset-0 z-50 bg-black/80 items-center justify-center p-4">
+  <div class="pn p-5 max-w-sm w-full text-center space-y-3">
+    <div id="gt" class="text-3xl font-extrabold"></div>
+    <div id="gs" class="text-sm dm"></div>
+    <a id="gx" target="_blank" rel="noopener" class="b r">Share Score on X</a>
+    <button class="b g w-full" onclick="newGame()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+// ===== EDIT ME: affiliate buttons =====
+const AFFILIATE={
+  axiom:{label:'Trade on Axiom',url:'https://axiom.trade/@YOURREF'},
+  trojan:{label:'Snipe with Trojan',url:'https://t.me/solana_trojanbot?start=r-YOURREF'}
+};
+// ======================================
+const $=i=>document.getElementById(i),rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),f2=n=>n.toFixed(2),GOAL=1000;
+let G,AC,snd=true;
+$('aA').textContent=AFFILIATE.axiom.label;$('aA').href=AFFILIATE.axiom.url;
+$('aT').textContent=AFFILIATE.trojan.label;$('aT').href=AFFILIATE.trojan.url;
+
+// ---- audio ----
+function tone(f,t,d,ty,v,sl){if(!snd||!AC)return;const n=AC.currentTime+t,o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,n);if(sl)o.frequency.exponentialRampToValueAtTime(sl,n+d);g.gain.setValueAtTime(v,n);g.gain.exponentialRampToValueAtTime(.001,n+d);o.connect(g);g.connect(AC.destination);o.start(n);o.stop(n+d)}
+const sfx={cash(){tone(1318,0,.12,'square',.07);tone(1760,.09,.12,'square',.07);tone(2637,.18,.4,'triangle',.12)},alarm(){for(let i=0;i<4;i++)tone(900,i*.22,.2,'sawtooth',.1,300)},buy(){tone(520,0,.08,'square',.05);tone(780,.06,.1,'square',.05)},loss(){tone(320,0,.3,'triangle',.12,140)}};
+['pointerdown','keydown'].forEach(e=>addEventListener(e,()=>{try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(x){}}));
+function mute(){snd=!snd;$('mu').textContent=snd?'🔊':'🔇'}
+
+// ---- helpers ----
+const fmtMc=v=>v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+(v/1e3).toFixed(1)+'K';
+function rank(b){return b>=GOAL?['Trench Legend','🏆']:b>=200?['Solana Whale','🐋']:b>=40?['KOL Hunter','🎯']:b>=5?['Trench Rookie','🪖']:['Exit Liquidity','💧']}
+const PRE=['WIF','ELON','PEPE','BONK','DOGE','MOON','CHAD','FROG','RUG','JEET','GIGA','BASED','PUMP','NORMIE','TRUMP','SOL'],SUF=['HAT','CAT','INU','AI','COIN','DAO','MAX','GPT','FART','2.0','JR','WIF'],
+CUR=[['WIFHAT','Dog Wif Hat'],['ELONCAT','Elon’s Cat'],['RUGME','Please Rug Me'],['JEETS','Jeet Tears'],['NOTRUG','Totally Not A Rug'],['BUNDLED','Bundled Bob']],
+cap=s=>s[0]+s.slice(1).toLowerCase();
+
+// hidden logic: stats decide the coin's fate
+function fate(c){
+  const risk=(c.fees<.2)+(c.bu>25)+(c.top>35),r=Math.random();
+  if(c.fees>1.5&&c.bu<15)return r<.1?'rug':r<.4?'meh':'pump';
+  if(risk>=2)return r<.8?'rug':r<.95?'meh':'pump';
+  if(risk===1)return r<.45?'rug':r<.8?'meh':'pump';
+  return r<.2?'rug':r<.6?'meh':'pump';
+}
+function mkCoin(){
+  let t,n;
+  if(Math.random()<.25){[t,n]=CUR[ri(0,CUR.length-1)]}else{const a=PRE[ri(0,PRE.length-1)],b=SUF[ri(0,SUF.length-1)];t=a+b;n=cap(a)+' '+cap(b)}
+  const c={tk:'$'+t,nm:n,mc:rnd(12e3,650e3),fees:+(.03+Math.pow(Math.random(),1.7)*4).toFixed(2),bu:Math.round(2+Math.pow(Math.random(),1.4)*50),top:Math.round(8+Math.pow(Math.random(),1.3)*54),age:ri(1,59),t:0,sub:0,price:1};
+  c.fate=fate(c);c.at=c.fate==='rug'?ri(6,34):ri(25,75);
+  c.m=Math.exp(Math.log(2)+Math.log(10)*Math.pow(Math.random(),1.6)); // 2x to 20x
+  c.late=Math.random()<.35;c.lag=ri(2,8);
+  let p=1;const raw=[];
+  for(let i=0;i<34;i++){const o=p;let h=p,l=p;for(let j=0;j<4;j++){p*=Math.exp(rnd(-.035,.035));h=Math.max(h,p);l=Math.min(l,p)}raw.push({o,h,l,c:p})}
+  c.candles=raw.map(k=>({o:k.o/p,h:k.h/p,l:k.l/p,c:k.c/p}));
+  return c;
+}
+
+// ---- game flow ----
+function log(m,c=''){G.log.unshift([m,c]);G.log.length=Math.min(G.log.length,6);$('lg').innerHTML=G.log.map(([m,c])=>`<div class="${c}">› ${m}</div>`).join('')}
+function newGame(){
+  clearTimeout(G&&G.nt);
+  G={bal:10,peak:10,streak:0,best:0,w:0,l:0,mode:'view',pos:null,log:[],over:false,left:10};
+  $('go').classList.add('hid');$('go').classList.remove('flex');
+  log('Wallet loaded: 10.00 SOL. Reach 1,000 SOL. Don’t get rugged.','dm');
+  next();
+}
+function next(){clearTimeout(G.nt);if(G.over)return;G.coin=mkCoin();G.mode='view';G.left=10;$('ov').classList.add('hid');render()}
+function skip(){if(G.mode==='view'&&!G.over)next()}
+function buy(a){
+  if(G.mode!=='view'||G.over||a>G.bal||a<.05)return;
+  G.bal-=a;G.pos={amt:a,entry:G.coin.price};G.mode='held';G.coin.t=0;sfx.buy();
+  log(`BUY ${f2(a)} SOL of ${G.coin.tk} @ ${fmtMc(G.coin.mc*G.coin.price)}`);render();
+}
+const val=()=>G.pos.amt*G.coin.price/G.pos.entry;
+function fx(cls){const e=$('card');e.classList.remove('shake','glow');void e.offsetWidth;e.classList.add(cls);setTimeout(()=>e.classList.remove(cls),700)}
+function finish(kind){
+  if(G.mode!=='held')return;
+  const v=val(),a=G.pos.amt,pnl=v-a,pct=(v/a-1)*100,win=pnl>0,tk=G.coin.tk;
+  G.bal+=v;G.peak=Math.max(G.peak,G.bal);G.mode='done';G.pos=null;
+  if(win){G.streak++;G.w++;G.best=Math.max(G.best,G.streak);sfx.cash();fx('glow')}
+  else{G.streak=0;G.l++;kind==='sell'?sfx.loss():sfx.alarm();if(kind!=='sell')fx('shake')}
+  const sg=pnl>=0?'+':'−';
+  $('ot').textContent=kind==='rug'?'DEV RUGGED!':kind==='dump'?'DUMPED!':win?'PROFIT LOCKED':'SOLD AT A LOSS';
+  $('ot').className='text-3xl sm:text-5xl font-extrabold '+(win?'up':'dn');
+  $('od').textContent=`${sg}${f2(Math.abs(pnl))} SOL (${sg}${Math.abs(pct).toFixed(0)}%)`;
+  $('od').className='text-lg mt-1 '+(win?'up':'dn');$('ov').classList.remove('hid');
+  log(`${kind==='sell'?'SOLD':kind==='rug'?'RUGGED':'DUMPED'} ${tk}: ${sg}${f2(Math.abs(pnl))} SOL`,win?'up':'dn');
+  render();
+  if(G.bal>=GOAL)return over(true);
+  if(G.bal<.25)return over(false);
+  G.nt=setTimeout(next,2600);
+}
+function over(win){
+  G.over=true;if(win)sfx.cash();
+  setTimeout(()=>{
+    $('gt').textContent=win?'🏆 TRENCH LEGEND':'💀 RUGGED OUT';$('gt').className='text-3xl font-extrabold '+(win?'up':'dn');
+    $('gs').textContent=`Final ${f2(G.bal)} SOL · Peak ${f2(G.peak)} · Best streak ${G.best} · ${G.w}W/${G.l}L`;
+    $('gx').href=shareUrl();$('go').classList.remove('hid');$('go').classList.add('flex');
+  },1700);
+}
+function shareUrl(){
+  const b=f2(G.bal),rk=rank(G.bal)[0];
+  let t=G.bal>=GOAL?`🚀 I turned 10 SOL into ${b} SOL in TRENCH SURVIVOR and made it out of the trenches! Rank: ${rk} | Best streak: ${G.best} 🔥`
+   :G.over?`💀 I got rugged in TRENCH SURVIVOR. Final: ${b} SOL | Rank: ${rk} | Best streak: ${G.best} 🔥`
+   :`📈 I’m sitting on ${b} SOL in TRENCH SURVIVOR | Rank: ${rk} | Streak: ${G.streak} 🔥`;
+  t+='\nThink you can survive the trenches? #Solana #memecoins';
+  let u='';try{u=location.href}catch(e){}
+  return 'https://x.com/intent/post?text='+encodeURIComponent(t)+(u.startsWith('http')?'&url='+encodeURIComponent(u):'');
+}
+
+// ---- price engine (every 300ms) ----
+function step(){
+  const c=G.coin;let d=0,k=0;
+  if(G.mode==='view')d=rnd(-.03,.03)+(1-c.price)*.15;
+  else if(G.mode==='held'){
+    c.t++;
+    if(c.fate==='rug'){c.t>=c.at?k=1:d=rnd(-.04,.06)}
+    else if(c.fate==='pump'){
+      if(c.t<c.at)d=Math.log(c.m)/c.at+rnd(-.07,.07);
+      else if(c.late&&c.t>=c.at+c.lag)k=1;
+      else d=rnd(-.13,.03);
+    }else d=c.t<40?rnd(-.05,.052):rnd(-.1,.02);
+  }else return;
+  const p=k?c.price*(c.fate==='rug'?.01:.04):c.price*Math.exp(d),q=c.candles[c.candles.length-1];
+  q.c=p;q.h=Math.max(q.h,p);q.l=Math.min(q.l,p);
+  if(++c.sub>=4){c.sub=0;c.candles.push({o:p,h:p,l:p,c:p})}
+  c.price=p;
+  if(G.mode==='held'){
+    if(k)finish('rug');
+    else if(p<G.pos.entry*.03)finish('dump');
+    else if(d>0)tone(300+Math.min(p/G.pos.entry,20)*70,0,.04,'sine',.03);
+  }
+}
+setInterval(()=>{
+  if(!G||G.over)return;
+  if(G.mode==='view'&&(G.left-=.3)<=0)return next();
+  step();render();
+},300);
+
+// ---- render ----
+function render(){
+  const c=G.coin,held=G.mode==='held',[rk,em]=rank(G.bal);
+  $('bal').textContent=f2(G.bal);$('rk').textContent=em+' '+rk;$('st').textContent=G.streak+' 🔥';$('bs').textContent='best '+G.best;$('wl').textContent=G.w+'W / '+G.l+'L';
+  $('gl').textContent=f2(G.bal)+' / 1,000';
+  $('gb').style.width=Math.max(2,Math.min(100,Math.log(Math.max(G.bal,1))/Math.log(GOAL)*100))+'%';
+  $('tk').textContent=c.tk;$('nm').textContent=c.nm+' · '+c.age+'m old';
+  const x=c.price/(G.pos?G.pos.entry:1);
+  $('xx').textContent='×'+x.toFixed(2);$('xx').className='text-xl sm:text-2xl font-extrabold '+(x>=1?'up':'dn');
+  $('xl').textContent=G.pos?'SINCE ENTRY':'LIVE';
+  $('t1').textContent=fmtMc(c.mc*c.price);$('t2').textContent=f2(c.fees)+' SOL';$('t3').textContent=c.bu+'%';$('t4').textContent=c.top+'%';
+  $('rowB').classList.toggle('hid',G.mode!=='view');$('rowS').classList.toggle('hid',!held);$('rowN').classList.toggle('hid',G.mode!=='done');$('pp').classList.toggle('hid',!held);
+  $('b1').disabled=G.bal<1;$('b5').disabled=G.bal<5;$('ba').disabled=G.bal<.05;$('ba').textContent='ALL IN ('+f2(G.bal)+')';
+  $('tm').style.width=(G.mode==='view'?G.left*10:0)+'%';
+  if(held){
+    const v=val(),pc=(v/G.pos.amt-1)*100;
+    $('pp').innerHTML=`<div class="dm text-[10px]">POSITION</div><div class="font-bold">${f2(G.pos.amt)} → <span class="${pc>=0?'up':'dn'}">${f2(v)} SOL (${pc>=0?'+':'−'}${Math.abs(pc).toFixed(1)}%)</span></div>`;
+    $('bS').textContent='SELL ALL · '+f2(v)+' SOL';
+  }
+  $('sx').href=shareUrl();
+  draw();
+}
+function draw(){
+  const cv=$('cv'),r=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
+  if(cv.width!==Math.round(w*r)){cv.width=Math.round(w*r);cv.height=Math.round(h*r)}
+  const x=cv.getContext('2d'),c=G.coin,cs=c.candles.slice(-42),en=G.pos&&G.pos.entry;
+  x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  let lo=Math.min(...cs.map(k=>k.l)),hi=Math.max(...cs.map(k=>k.h));
+  if(en){lo=Math.min(lo,en);hi=Math.max(hi,en)}
+  const pd=(hi-lo)*.12||.02;lo-=pd;hi+=pd;
+  const W=w-58,cw=W/42,Y=v=>h-6-(v-lo)/(hi-lo)*(h-12);
+  x.font='10px JetBrains Mono,monospace';x.lineWidth=1;x.setLineDash([]);
+  for(let i=0;i<5;i++){const v=lo+(hi-lo)*i/4,y=Y(v);x.strokeStyle='#1a212b';x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.fillStyle='#6c7889';x.fillText(fmtMc(c.mc*v),W+4,y+3)}
+  cs.forEach((k,i)=>{
+    const px=i*cw+cw/2,col=k.c>=k.o?'#22c55e':'#ef4444',t=Y(Math.max(k.o,k.c)),b=Y(Math.min(k.o,k.c));
+    x.strokeStyle=x.fillStyle=col;x.beginPath();x.moveTo(px,Y(k.h));x.lineTo(px,Y(k.l));x.stroke();x.fillRect(px-cw*.32,t,cw*.64,Math.max(1.5,b-t));
+  });
+  const last=cs[cs.length-1],cy=Y(c.price),col=c.price>=last.o?'#22c55e':'#ef4444';
+  const line=(y,co,lb)=>{x.setLineDash([3,3]);x.strokeStyle=co;x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.setLineDash([]);x.fillStyle=co;x.fillRect(W,y-8,56,16);x.fillStyle='#000';x.fillText(lb,W+3,y+3)};
+  if(en)line(Y(en),'#8b7cff','ENTRY');
+  line(cy,col,fmtMc(c.mc*c.price));
+}
+addEventListener('keydown',e=>{
+  if(!G||G.over)return;const k=e.key.toLowerCase();
+  if(G.mode==='view'){if(k==='1')buy(1);else if(k==='5')buy(5);else if(k==='a')buy(G.bal);else if(k==='s')skip()}
+  else if((k===' '||k==='enter')&&(G.mode==='held'||G.mode==='done')){e.preventDefault();G.mode==='held'?finish('sell'):next()}
+});
+addEventListener('keyup',e=>{if(e.key===' ')e.preventDefault()});
+addEventListener('resize',()=>G&&draw());
+newGame();
+</script>
+</body>
+</html>
